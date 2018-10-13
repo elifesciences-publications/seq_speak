@@ -25,3 +25,23 @@ class TempContainer(object):
     
     def reset(self):
         self.__dict__ = {}
+
+        
+# MATH
+
+def sgmd(x):
+    """Sigmoid (logistic) function."""
+    return 1 / (1 + np.exp(-x))
+
+
+def lognormal_mu_sig(mean, std):
+    """Get log-normal params from mean and std."""
+    if mean <= 0:
+        raise ValueError('Mean must be > 0 for log-normal distribution')
+    
+    b = 1 + (std**2)/(mean**2)
+    
+    mu = np.log(mean/np.sqrt(b))
+    sig = np.sqrt(np.log(b))
+    
+    return mu, sig
