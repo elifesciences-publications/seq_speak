@@ -1,7 +1,8 @@
 *
 
 !*.md
-!*.py
 !*.ipynb
+!*.py
+!replay
 !*.gitignore
 
