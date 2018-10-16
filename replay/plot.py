@@ -13,23 +13,24 @@ from disp import set_font_size
 def heat_maps(rslt, epoch=None):
     """
     Plot heatmaps showing:
-        1. W_E_PC_ST values at start of trial.
-        2. W_E_PC_ST values at replay trigger.
+        1. W_E_PC_G values at start of trial.
+        2. W_E_PC_G values at replay trigger.
         3. # spks per PC within detection wdw.
         4. Firing order of first spikes.
     """
-    # W_E_PC_ST
-    pcs = rslt.ntwk.plasticity['masks']['E'].nonzero()[0]
+    # W_E_PC_G
+    #pcs = rslt.ntwk.plasticity['masks']['E'].nonzero()[0]
+    pcs = np.nonzero(rslt.ntwk.types_rcr == 'PC')[0]
 
     fig, axs = plt.subplots(1, 2, figsize=(12, 6), tight_layout=True)
 
     ## at start
-    w_e_pc_st_start = rslt.ws_up['E'][:, rslt.ntwk.types_up == 'ST'].data
+    w_e_pc_st_start = rslt.ws_up['E'][:, rslt.ntwk.types_up_slc['G']].data
     # import pdb; pdb.set_trace()
     # w_e_pc_st_start = np.array(rslt.ws_plastic['E'][0, pcs]).flatten()
     ## at trigger
     t_idx_trg = int(rslt.schedule['TRG_START_T'] / rslt.s_params['DT'])
-    w_e_pc_st_trg = rslt.ws_up['E'][:, rslt.ntwk.types_up == 'ST'].data
+    w_e_pc_st_trg = rslt.ws_up['E'][:, rslt.ntwk.types_up_slc['G']].data
     # w_e_pc_st_trg = np.array(rslt.ws_plastic['E'][t_idx_trg, pcs]).flatten()
 
     ## get corresponding place fields
@@ -37,15 +38,15 @@ def heat_maps(rslt, epoch=None):
     pfys_plastic = rslt.ntwk.pfys[pcs]
 
     ## make plots
-    v_min = rslt.p['W_E_INIT_PC_ST']
-    v_max = rslt.p['W_E_INIT_PC_ST'] * rslt.p['A_P']
+    v_min = rslt.p['W_E_PC_G']
+    v_max = rslt.p['W_E_PC_G'] * rslt.p['W_G_MAX']
 
     ## at start
     im_0 = axs[0].scatter(
         pfxs_plastic, pfys_plastic, c=w_e_pc_st_start,
         s=25, vmin=v_min, vmax=v_max, cmap='hot')
 
-    axs[0].set_title('W_E_PC_ST at trial start')
+    axs[0].set_title('W_E_PC_G at trial start')
 
     ## colorbar nonsense
     divider_0 = make_axes_locatable(axs[0])
@@ -66,7 +67,7 @@ def heat_maps(rslt, epoch=None):
         im_1, cax=c_ax_1, ticks=[v_min, v_max])
     cb_1.set_ticklabels(['{0:.4f}'.format(v_min), '{0:.4f}'.format(v_max)])
 
-    axs[1].set_title('W_E_PC_ST at replay trigger')
+    axs[1].set_title('W_E_PC_G at replay trigger')
 
     for ax in axs[:2]:
         ax.set_xlabel('PF X (m)')
@@ -194,15 +195,6 @@ def raster(rslt, xys, nearest, epoch):
     
     # get desired time window
     if epoch == 'replay':
-        start = rslt.schedule['REPLAY_EPOCH_START_T']
-        end = rslt.schedule['SMLN_DUR']
-    elif epoch == 'wdw':
-        start = rslt.schedule['TRG_START_T']
-        end = start + rslt.s_params['metrics']['WDW']
-    elif epoch == 'trj':
-        start = rslt.schedule['TRJ_START_T']
-        end = rslt.schedule['REPLAY_EPOCH_START_T']
-    elif epoch == 'full':
         start = 0
         end = rslt.schedule['SMLN_DUR']
     elif isinstance(epoch, tuple):

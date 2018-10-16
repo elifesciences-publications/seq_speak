@@ -101,7 +101,7 @@ class LIFNtwk(object):
     :param t_m: membrane time constant (or 1D array)
     :param e_l: leak reversal potential (or 1D array)
     :param v_th: firing threshold potential (or 1D array)
-    :param v_reset: reset potential (or 1D array)
+    :param v_r: reset potential (or 1D array)
     :param t_r: refractory time
     :param es_syn: synaptic reversal potentials (dict with keys naming
         synapse types, e.g., 'AMPA', 'NMDA', ...)
@@ -114,7 +114,7 @@ class LIFNtwk(object):
     """
     
     def __init__(self,
-            t_m, e_l, v_th, v_reset, t_r,
+            t_m, e_l, v_th, v_r, t_r,
             es_syn=None, ts_syn=None, ws_up=None, ws_rcr=None, 
             sparse=True):
         """Constructor."""
@@ -165,15 +165,15 @@ class LIFNtwk(object):
             raise ValueError(
                 'All upstream weight matrices must have same number of columns.')
 
-        # make sure v_reset is actually an array
-        if isinstance(v_reset, (int, float, complex)):
-            v_reset = v_reset * np.ones(self.n)
+        # make sure v_r is actually an array
+        if isinstance(v_r, (int, float, complex)):
+            v_r = v_r * np.ones(self.n)
             
         # store network params
         self.t_m = t_m
         self.e_l = e_l
         self.v_th = v_th
-        self.v_reset = v_reset
+        self.v_r = v_r
         self.t_r = t_r
         
         self.es_syn = es_syn
@@ -184,8 +184,8 @@ class LIFNtwk(object):
             ws_up = {syn: csc_matrix(w) for syn, w in ws_up.items()}
             
         self.ws_rcr = ws_rcr
-        self.ws_up_init = ws_up
-
+        self.ws_up = ws_up
+        
     def run(self, spks_up, dt, vs_0=None, gs_0=None, i_ext=None, store=None, report_every=None):
         """
         Run a simulation of the network.
@@ -278,8 +278,6 @@ class LIFNtwk(object):
                 gs[syn][0, :] = gs_0[syn].copy()
                   
         # run simulation
-        ws_up = deepcopy(self.ws_up_init)
-        
         smln_start_time = time.time()
         last_update = time.time()
         
@@ -289,7 +287,7 @@ class LIFNtwk(object):
             for syn in self.syns:
                 
                 # calculate new conductances for all synapse types
-                w_up = ws_up[syn]
+                w_up = self.ws_up[syn]
                 w_rcr = self.ws_rcr[syn]
                 t_syn = self.ts_syn[syn]
 
@@ -316,13 +314,13 @@ class LIFNtwk(object):
             vs_prev = vs_prev + dvs
             
             # force refractory neurons to reset potential
-            vs_prev[rp_ctrs > 0] = self.v_reset[rp_ctrs > 0]
+            vs_prev[rp_ctrs > 0] = self.v_r[rp_ctrs > 0]
             
             # identify spks
             spks_prev = vs_prev >= self.v_th
                   
             # reset membrane potentials of spiking neurons
-            vs_prev[spks_prev] = self.v_reset[spks_prev]
+            vs_prev[spks_prev] = self.v_r[spks_prev]
             
             # set refractory counters for spiking neurons
             rp_ctrs[spks_prev] = self.t_r[spks_prev]
@@ -354,9 +352,10 @@ class LIFNtwk(object):
                
         # return NtwkResponse object
         return NtwkResponse(
-            ts=ts, vs=vs, spks=spks, v_rest=self.e_l, v_th=self.v_th,
-            gs=gs, ws_rcr=self.ws_rcr, ws_up=self.ws_up_init)
+            ts=ts, vs=vs, spks=spks, e_l=self.e_l, v_th=self.v_th,
+            gs=gs, ws_rcr=self.ws_rcr, ws_up=self.ws_up)
 
+    
 class NtwkResponse(object):
     """
     Class for storing network response parameters.
@@ -375,7 +374,7 @@ class NtwkResponse(object):
     :param pfcs: array of cell place field centers
     """
 
-    def __init__(self, ts, vs, spks, v_rest, v_th, gs, ws_rcr, ws_up, cell_types=None, pfcs=None):
+    def __init__(self, ts, vs, spks, e_l, v_th, gs, ws_rcr, ws_up, cell_types=None, pfcs=None):
         """Constructor."""
         # check args
         if (cell_types is not None) and (len(cell_types) != vs.shape[1]):
@@ -385,7 +384,7 @@ class NtwkResponse(object):
         self.ts = ts
         self.vs = vs
         self.spks = spks
-        self.v_rest = v_rest
+        self.e_l = e_l
         self.v_th = v_th
         self.gs = gs
         self.ws_rcr = ws_rcr
