@@ -26,7 +26,6 @@ def run(p, s_params):
     
     ## adjust schedule
     t = np.arange(0, schedule['SMLN_DUR'], s_params['DT'])
-    print('Schedule:', schedule)
     
     ## build ntwk
     ntwk = build_ntwk(p, s_params)
