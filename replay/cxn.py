@@ -76,10 +76,7 @@ def apx_lattice(lb, ub, n, randomize):
 
 
 def make_w_e_pc_pc(pfxs, pfys, p):
-    """
-    Make proximally biased PC-PC weight matrix.
-    """
-    # make cxns
+    """Make PC-PC E weight mat w/ weight increasing w/ proxim."""
     n_pc = p['N_PC']
     
     ## build distance matrix
@@ -87,25 +84,15 @@ def make_w_e_pc_pc(pfxs, pfys, p):
     dy = np.tile(pfys[None, :], (n_pc, 1)) - np.tile(pfys[:, None], (1, n_pc))
     d = np.sqrt(dx**2 + dy**2)
     
-    ## build cxn probability matrix
-    prb = np.clip(p['Z_PC_PC'] * np.exp(-d**2/(2*p['L_PC_PC']**2)), 0, 1)
+    ## build weight matrix
+    ### have weights decrease as squared exp of dist
+    w = p['W_E_PC_PC'] * np.exp(-d**2/(2*p['L_PC_PC']**2))
     
-    ## set diagonals to zero
-    np.fill_diagonal(prb, False)
-    
-    ## build cxn matrix from cxn prb
-    c = np.random.rand(n_pc, n_pc) < prb
-    
-    # assign weights
-    w = np.zeros((n_pc, n_pc))
-    if p['W_E_PC_PC'] > 0:
-        w[c] = np.random.lognormal(
-            *lognormal_mu_sig(p['W_E_PC_PC'], p['S_E_PC_PC']), c.sum())
-    else:
-        w[c] = np.zeros(c.sum())
-    
+    ### set all weights below min weight th to 0
+    w[w < p['W_E_MIN_PC_PC']] = 0
+      
     return w
-
+    
 
 def make_w_e_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
     """
@@ -122,21 +109,7 @@ def make_w_e_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
         - np.tile(pfys_inh[:, None], (1, n_pc))
     d = np.sqrt(dx**2 + dy**2)
     
-    ## build cxn probability matrix
-    prb = np.clip(p['Z_INH_PC'] * np.exp(-d**2/(2*p['L_INH_PC']**2)), 0, 1)
-    
-    ## build cxn matrix
-    c = np.random.rand(n_inh, n_pc) < prb
-    
-    # assign weights
-    w = np.zeros(c.shape)
-    if p['W_E_INH_PC'] > 0:
-        w[c] = np.random.lognormal(
-            *lognormal_mu_sig(p['W_E_INH_PC'], p['S_E_INH_PC']), c.sum())
-    else:
-        w[c] = np.zeros(c.sum())
-    
-    return w
+    return np.zeros(d.shape)
     
     
 def make_w_i_pc_inh(pfxs_pc, pfys_pc, pfxs_inh, pfys_inh, p):
@@ -154,20 +127,4 @@ def make_w_i_pc_inh(pfxs_pc, pfys_pc, pfxs_inh, pfys_inh, p):
         - np.tile(pfys_pc[:, None], (1, n_inh))
     d = np.sqrt(dx**2 + dy**2)
     
-    ## build cxn probability matrix
-    prb_unclipped = p['Z_S_PC_INH'] * np.exp(-d**2/(2*p['L_S_PC_INH']**2)) \
-        - p['Z_C_PC_INH'] * np.exp(-d**2/(2*p['Z_C_PC_INH']**2))
-    prb = np.clip(prb_unclipped, 0, 1)
-    
-    ## build cxn matrix
-    c = np.random.rand(n_pc, n_inh) < prb
-    
-    # assign weights
-    w = np.zeros(c.shape)
-    if p['W_I_PC_INH'] > 0:
-        w[c] = np.random.lognormal(
-            *lognormal_mu_sig(p['W_I_PC_INH'], p['S_I_PC_INH']), c.sum())
-    else:
-        w[c] = np.zeros(c.sum())
-    
-    return w
+    return np.zeros(d.shape)
