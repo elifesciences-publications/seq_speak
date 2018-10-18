@@ -11,19 +11,19 @@ class Generic(object):
             self.__dict__[k] = v
             
 
-class TempContainer(object):
+class Ephemeral(object):
     """
     Class to contain temporary variables.
     
     Usage:
-    >>> TMP = TempContainer()
-    >>> TMP.num = (3 + 1 + 5 + 6 + 3)
-    >>> TMP.denom = (2 + 4 + 3 + 2)
-    >>> x = TMP.num / TMP.denom
-    >>> TMP.reset()
+    >>> E = E()
+    >>> E.num = (3 + 1 + 5 + 6 + 3)
+    >>> E.denom = (2 + 4 + 3 + 2)
+    >>> x = E.num / E.denom
+    >>> E.clear()
     """
     
-    def reset(self):
+    def clear(self):
         self.__dict__ = {}
 
         
