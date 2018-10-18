@@ -352,7 +352,7 @@ class LIFNtwk(object):
                
         # return NtwkResponse object
         return NtwkResponse(
-            ts=ts, vs=vs, spks=spks, e_l=self.e_l, v_th=self.v_th,
+            ts=ts, vs=vs, spks=spks, spks_up=spks_up, dt=dt, i_ext=i_ext, e_l=self.e_l, v_th=self.v_th,
             gs=gs, ws_rcr=self.ws_rcr, ws_up=self.ws_up)
 
     
@@ -374,7 +374,7 @@ class NtwkResponse(object):
     :param pfcs: array of cell place field centers
     """
 
-    def __init__(self, ts, vs, spks, e_l, v_th, gs, ws_rcr, ws_up, cell_types=None, pfcs=None):
+    def __init__(self, ts, vs, spks, spks_up, dt, i_ext, e_l, v_th, gs, ws_rcr, ws_up, cell_types=None, pfcs=None):
         """Constructor."""
         # check args
         if (cell_types is not None) and (len(cell_types) != vs.shape[1]):
@@ -384,6 +384,9 @@ class NtwkResponse(object):
         self.ts = ts
         self.vs = vs
         self.spks = spks
+        self.spks_up = spks_up
+        self.dt = dt
+        self.i_ext = i_ext
         self.e_l = e_l
         self.v_th = v_th
         self.gs = gs
