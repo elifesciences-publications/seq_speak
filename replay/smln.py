@@ -238,11 +238,10 @@ def get_trj_veil(trj, ntwk, p, s_params):
     ## get distance to trj
     d = dist_to_trj(ntwk.pfxs, ntwk.pfys, trj['x'], trj['y'])[0]
     
-    ## compute scale factor
-    radius = s_params['metrics']['RADIUS']
-    pitch = s_params['metrics']['PITCH']
-    g = np.maximum(1 - np.abs(d/radius)**pitch, 0)
-    veil = ((1 - g)*1 + g*p['SGM_MAX']) - 1
+    # sensory-driven firing rates as function of d
+    r = p['R_MAX'] * np.exp(-.5*(d**2)/(p['L_PL']**2))
+    sgm = 1 + (p['SGM_MAX'] - 1) * sgmd(p['B_SGM']*(r - p['R_SGM']))
+    veil = sgm - 1
     
     return veil
     
