@@ -11,7 +11,8 @@ cc = np.concatenate
 
 def apx_lattice(lb, ub, n, randomize):
     """
-    Arrange n points on an approximate lattice within a rectangle.
+    Arrange n points on an apx. lattice within a rectangle.
+    (Apx. b/c rectangle dims may not evenly divide n.)
     """
     lb_x, lb_y = lb
     ub_x, ub_y = ub
@@ -75,8 +76,8 @@ def apx_lattice(lb, ub, n, randomize):
     return xs, ys
 
 
-def make_w_e_pc_pc(pfxs, pfys, p):
-    """Make PC-PC E weight mat w/ weight increasing w/ proxim."""
+def make_w_pc_pc(pfxs, pfys, p):
+    """Make PC-PC weight mat w/ weight increasing w/ proxim."""
     n_pc = p['N_PC']
     
     ## build distance matrix
@@ -86,15 +87,15 @@ def make_w_e_pc_pc(pfxs, pfys, p):
     
     ## build weight matrix
     ### have weights decrease as squared exp of dist
-    w = p['W_E_PC_PC'] * np.exp(-d**2/(2*p['L_PC_PC']**2))
+    w = p['W_PC_PC'] * np.exp(-d**2/(2*p['L_PC_PC']**2))
     
     ### set all weights below min weight th to 0
-    w[w < p['W_E_MIN_PC_PC']] = 0
+    w[w < p['W_MIN_PC_PC']] = 0
       
     return w
     
 
-def make_w_e_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
+def make_w_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
     """
     Make proximally biased PC->INH weight matrix.
     """
@@ -112,7 +113,7 @@ def make_w_e_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
     return np.zeros(d.shape)
     
     
-def make_w_i_pc_inh(pfxs_pc, pfys_pc, pfxs_inh, pfys_inh, p):
+def make_w_pc_inh(pfxs_pc, pfys_pc, pfxs_inh, pfys_inh, p):
     """
     Make center-surround structured INH->PC weight matrix.
     """

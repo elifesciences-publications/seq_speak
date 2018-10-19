@@ -25,7 +25,7 @@ def run(p, s_params):
     schedule = s_params['schedule']
     
     ## adjust schedule
-    t = np.arange(0, schedule['SMLN_DUR'], s_params['DT'])
+    t = np.arange(0, schedule['D_SMLN'], s_params['DT'])
     
     ## build ntwk
     ntwk = build_ntwk(p, s_params)
@@ -108,22 +108,22 @@ def build_ntwk(p, s_params):
     pfys = cc([pfys_e, pfys_i])
     
     # make upstream ws
-    if p['W_E_PC_PL'] > 0:
-        w_e_pc_pl_flat = np.random.lognormal(
-            *lognormal_mu_sig(p['W_E_PC_PL'], p['S_E_PC_PL']), p['N_PC'])
+    if p['W_PC_PL'] > 0:
+        w_pc_pl_flat = np.random.lognormal(
+            *lognormal_mu_sig(p['W_PC_PL'], p['S_PC_PL']), p['N_PC'])
     else:
-        w_e_pc_pl_flat = np.zeros(p['N_PC'])
+        w_pc_pl_flat = np.zeros(p['N_PC'])
     
-    if p['W_E_PC_G'] > 0:
-        w_e_pc_g_flat = np.random.lognormal(
-            *lognormal_mu_sig(p['W_E_PC_G'], p['S_E_PC_G']), p['N_PC'])
+    if p['W_PC_G'] > 0:
+        w_pc_g_flat = np.random.lognormal(
+            *lognormal_mu_sig(p['W_PC_G'], p['S_PC_G']), p['N_PC'])
     else:
-        w_e_pc_g_flat = np.zeros(p['N_PC'])
+        w_pc_g_flat = np.zeros(p['N_PC'])
     
     ws_up_temp = {
         'E': {
-            ('PC', 'PL'): np.diag(w_e_pc_pl_flat),
-            ('PC', 'G'): np.diag(w_e_pc_g_flat),
+            ('PC', 'PL'): np.diag(w_pc_pl_flat),
+            ('PC', 'G'): np.diag(w_pc_g_flat),
         },
     }
     
@@ -133,16 +133,16 @@ def build_ntwk(p, s_params):
     ws_up = join_w(targs_up, srcs_up, ws_up_temp)
     
     # make rcr ws
-    w_e_pc_pc = cxn.make_w_e_pc_pc(pfxs[:p['N_PC']], pfys[:p['N_PC']], p)
+    w_pc_pc = cxn.make_w_pc_pc(pfxs[:p['N_PC']], pfys[:p['N_PC']], p)
     
-    w_e_inh_pc = cxn.make_w_e_inh_pc(
+    w_inh_pc = cxn.make_w_inh_pc(
         pfxs_inh=pfxs[-p['N_INH']:],
         pfys_inh=pfys[-p['N_INH']:],
         pfxs_pc=pfxs[:p['N_PC']],
         pfys_pc=pfys[:p['N_PC']],
         p=p)
     
-    w_i_pc_inh = cxn.make_w_i_pc_inh(
+    w_pc_inh = cxn.make_w_pc_inh(
         pfxs_pc=pfxs[:p['N_PC']],
         pfys_pc=pfys[:p['N_PC']],
         pfxs_inh=pfxs[-p['N_INH']:],
@@ -151,11 +151,11 @@ def build_ntwk(p, s_params):
     
     ws_rcr_temp = {
         'E': {
-            ('PC', 'PC'): w_e_pc_pc,
-            ('INH', 'PC'): w_e_inh_pc,
+            ('PC', 'PC'): w_pc_pc,
+            ('INH', 'PC'): w_inh_pc,
         },
         'I': {
-            ('PC', 'INH'): w_i_pc_inh,
+            ('PC', 'INH'): w_pc_inh,
         },
     }
     targs_rcr = cc([np.repeat('PC', p['N_PC']), np.repeat('INH', p['N_INH'])])
@@ -242,7 +242,7 @@ def get_trj_veil(trj, ntwk, p, s_params):
     radius = s_params['metrics']['RADIUS']
     pitch = s_params['metrics']['PITCH']
     g = np.maximum(1 - np.abs(d/radius)**pitch, 0)
-    veil = ((1 - g)*1 + g*p['W_G_MAX']) - 1
+    veil = ((1 - g)*1 + g*p['SGM_MAX']) - 1
     
     return veil
     
@@ -265,7 +265,7 @@ def dist_to_trj(pfxs, pfys, x, y):
    
 def apx_ws_up(ntwk, trj_veil):
     """
-    Replace G->PC E weights with apxns expected following
+    Replace G->PC weights with apxns expected following
     initial sensory input.
     """
     scale = trj_veil[ntwk.types_rcr == 'PC'] + 1
@@ -314,7 +314,7 @@ def spks_up_from_g(t, ntwk, p, s_params, schedule):
     
     # replay epoch
     spks_up[:, p['N_PC']:] += np.random.poisson(
-        p['FR_RPL_PC_G'] * s_params['DT'], (len(t), p['N_PC']))
+        p['R_G'] * s_params['DT'], (len(t), p['N_PC']))
         
     return spks_up
 
@@ -330,11 +330,11 @@ def i_ext_trg(t, ntwk, p, s_params, schedule):
     trg_mask = get_trg_mask_pc(ntwk, p, s_params)
     
     ## get time mask
-    t_mask = (schedule['TRG_START_T'] <= t) \
-        & (t < (schedule['TRG_START_T'] + p['D_T_TR']))
+    t_mask = (schedule['T_TRG'] <= t) \
+        & (t < (schedule['T_TRG'] + p['D_TRG']))
     
     ## add in external trigger
-    i_ext[np.outer(t_mask, trg_mask)] = p['A_TR']
+    i_ext[np.outer(t_mask, trg_mask)] = p['A_TRG']
     
     return i_ext
 
@@ -345,7 +345,7 @@ def get_trg_mask_pc(ntwk, p, s_params):
     d = np.sqrt(dx**2 + dy**2)
     
     ## get mask
-    trg_mask = (d < p['R_TR']) & (ntwk.types_rcr == 'PC')
+    trg_mask = (d < p['R_TRG']) & (ntwk.types_rcr == 'PC')
     return trg_mask
 
 
@@ -361,7 +361,7 @@ def get_metrics(rslt, s_params):
     non_trj_mask = (~trj_mask) & mask_pc
     
     # get t_mask for detection window
-    start = rslt.schedule['TRG_START_T']
+    start = rslt.schedule['T_TRG']
     end = start + m['WDW']
     t_mask = (start <= rslt.ts) & (rslt.ts < end)
     
