@@ -18,12 +18,10 @@ def heat_maps(rslt, epoch=None):
         3. # spks per PC within detection wdw.
         4. Firing order of first spikes.
     """
-    # Sigma (potentiation level)
+    # Potentiation profile
     pcs = np.nonzero(rslt.ntwk.types_rcr == 'PC')[0]
 
-    fig, ax = plt.subplots(1, 1, figsize=(6, 6), tight_layout=True)
 
-    ## sgm
     sgm = rslt.ntwk.sgm[pcs]
 
     ## get corresponding place fields
@@ -31,6 +29,8 @@ def heat_maps(rslt, epoch=None):
     pfy_pcs = rslt.ntwk.pfys[pcs]
 
     ## make plots
+    fig, ax = plt.subplots(1, 1, figsize=(6, 6), tight_layout=True)
+    
     v_min = 1
     v_max = rslt.p['SGM_MAX']
     sgm_ticks = np.linspace(v_min, v_max, 5)
@@ -56,7 +56,7 @@ def heat_maps(rslt, epoch=None):
     figs = [fig]
     axss = [ax]
 
-    # PC spike statistics
+    # Spike statistics
     fig, axs = plt.subplots(1, 2, figsize=(12, 6), tight_layout=True)
 
     ## detection wdw
@@ -97,12 +97,14 @@ def heat_maps(rslt, epoch=None):
     cb_0.set_ticklabels([0, 1, 2, 3, 4, '>4'])
 
     axs[0].set_aspect('equal')
+    set_n_x_ticks(axs[0], 5, -1, 1)
     axs[0].set_facecolor((.7, .7, .7))
 
     axs[0].set_xlabel('PF X (m)')
     axs[0].set_ylabel('PF Y (m)')
     axs[0].set_title('detection wdw spk ct')
 
+    
     for ax in [axs[0], cb_0.ax]:
         set_font_size(ax, 16)
 
@@ -130,9 +132,11 @@ def heat_maps(rslt, epoch=None):
         cb_1 = fig.colorbar(im_1, cax=c_ax_1, ticks=[v_min, v_max])
         cb_1.set_ticklabels(['first', 'last'])
 
-        axs[1].set_title('first spk order')
         axs[1].set_aspect('equal')
         
+        set_n_x_ticks(axs[1], 5, -1, 1)
+        
+        axs[1].set_title('first spk order')
         for ax in [axs[1], cb_1.ax]:
             set_font_size(ax, 16)
     else:
