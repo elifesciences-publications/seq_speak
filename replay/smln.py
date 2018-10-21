@@ -34,6 +34,7 @@ def run(p, s_params):
     ## values are >= 0 and correspond to apx. scale factors on
     ## corresponding G->PC weights minus 1
     trj_veil = get_trj_veil(trj, ntwk, p, s_params)
+    ntwk.sgm = trj_veil + 1
     
     ## approximate G->PC weights if desired
     ntwk = apx_ws_up(ntwk, trj_veil)
