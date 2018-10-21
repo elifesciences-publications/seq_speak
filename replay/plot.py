@@ -7,7 +7,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
 
-from disp import set_font_size
+from disp import set_font_size, set_n_x_ticks, set_n_y_ticks
 
 
 def heat_maps(rslt, epoch=None):
@@ -18,65 +18,43 @@ def heat_maps(rslt, epoch=None):
         3. # spks per PC within detection wdw.
         4. Firing order of first spikes.
     """
-    # W_PC_G
+    # Sigma (potentiation level)
     pcs = np.nonzero(rslt.ntwk.types_rcr == 'PC')[0]
 
-    fig, axs = plt.subplots(1, 2, figsize=(12, 6), tight_layout=True)
+    fig, ax = plt.subplots(1, 1, figsize=(6, 6), tight_layout=True)
 
-    ## at start
-    w_pc_g_start = rslt.ws_up['E'][:, rslt.ntwk.types_up_slc['G']].data
-    ## at trigger
-    t_idx_trg = int(rslt.schedule['T_TRG'] / rslt.s_params['DT'])
-    w_pc_g_trg = rslt.ws_up['E'][:, rslt.ntwk.types_up_slc['G']].data
+    ## sgm
+    sgm = rslt.ntwk.sgm[pcs]
 
     ## get corresponding place fields
-    pfxs_plastic = rslt.ntwk.pfxs[pcs]
-    pfys_plastic = rslt.ntwk.pfys[pcs]
+    pfx_pcs = rslt.ntwk.pfxs[pcs]
+    pfy_pcs = rslt.ntwk.pfys[pcs]
 
     ## make plots
-    v_min = rslt.p['W_PC_G']
-    v_max = rslt.p['W_PC_G'] * rslt.p['SGM_MAX']
+    v_min = 1
+    v_max = rslt.p['SGM_MAX']
+    sgm_ticks = np.linspace(v_min, v_max, 5)
 
-    ## at start
-    im_0 = axs[0].scatter(
-        pfxs_plastic, pfys_plastic, c=w_pc_g_start,
-        s=25, vmin=v_min, vmax=v_max, cmap='hot')
+    im = ax.scatter(pfx_pcs, pfy_pcs, c=sgm, s=25, vmin=v_min, vmax=v_max, cmap='hot')
 
-    axs[0].set_title('W_PC_G at trial start')
+    ax.set_title('Potentiation profile')
 
     ## colorbar nonsense
-    divider_0 = make_axes_locatable(axs[0])
-    c_ax_0 = divider_0.append_axes('right', '5%', pad=0.05)
-    cb_0 = fig.colorbar(
-        im_0, cax=c_ax_0, ticks=[v_min, v_max])
-    cb_0.set_ticklabels(['{0:.4f}'.format(v_min), '{0:.4f}'.format(v_max)])
+    divider = make_axes_locatable(ax)
+    c_ax = divider.append_axes('right', '5%', pad=0.05)
+    cb = fig.colorbar(im, cax=c_ax, ticks=sgm_ticks)
+    c_ax.set_ylabel('$\sigma$')
 
-    ## at trigger
-    im_1 = axs[1].scatter(
-        pfxs_plastic, pfys_plastic, c=w_pc_g_trg,
-        s=25, vmin=v_min, vmax=v_max, cmap='hot')
+    ax.set_xlabel('PF X (m)')
+    ax.set_ylabel('PF Y (m)')
+    ax.set_aspect('equal')
+    ax.set_facecolor((.7, .7, .7))
+    set_font_size(ax, 16)
 
-    ## colorbar nonsense
-    divider_1 = make_axes_locatable(axs[1])
-    c_ax_1 = divider_1.append_axes('right', '5%', pad=0.05)
-    cb_1 = fig.colorbar(
-        im_1, cax=c_ax_1, ticks=[v_min, v_max])
-    cb_1.set_ticklabels(['{0:.4f}'.format(v_min), '{0:.4f}'.format(v_max)])
-
-    axs[1].set_title('W_PC_G at replay trigger')
-
-    for ax in axs[:2]:
-        ax.set_xlabel('PF X (m)')
-        ax.set_ylabel('PF Y (m)')
-        ax.set_aspect('equal')
-        ax.set_facecolor((.7, .7, .7))
-        set_font_size(ax, 16)
-
-    for ax in [cb_0.ax, cb_1.ax]:
-        set_font_size(ax, 16)
+    set_font_size(c_ax, 16)
 
     figs = [fig]
-    axss = [axs]
+    axss = [ax]
 
     # PC spike statistics
     fig, axs = plt.subplots(1, 2, figsize=(12, 6), tight_layout=True)
