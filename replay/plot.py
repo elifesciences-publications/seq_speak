@@ -10,7 +10,7 @@ import numpy as np
 from disp import set_font_size, set_n_x_ticks, set_n_y_ticks
 
 
-def heat_maps(rslt, epoch=None):
+def heat_maps(rslt, epoch=None, cmap='viridis'):
     """
     Plot heatmaps showing:
         1. W_PC_G values at start of trial.
@@ -48,10 +48,12 @@ def heat_maps(rslt, epoch=None):
     ax.set_xlabel('PF X (m)')
     ax.set_ylabel('PF Y (m)')
     ax.set_aspect('equal')
+    set_n_x_ticks(ax, 5, -1, 1)
+    set_n_y_ticks(ax, 5, -1, 1)
     ax.set_facecolor((.7, .7, .7))
-    set_font_size(ax, 16)
+    set_font_size(ax, 20)
 
-    set_font_size(c_ax, 16)
+    set_font_size(c_ax, 20)
 
     figs = [fig]
     axss = [ax]
@@ -98,6 +100,7 @@ def heat_maps(rslt, epoch=None):
 
     axs[0].set_aspect('equal')
     set_n_x_ticks(axs[0], 5, -1, 1)
+    set_n_y_ticks(axs[0], 5, -1, 1)
     axs[0].set_facecolor((.7, .7, .7))
 
     axs[0].set_xlabel('PF X (m)')
@@ -106,7 +109,7 @@ def heat_maps(rslt, epoch=None):
 
     
     for ax in [axs[0], cb_0.ax]:
-        set_font_size(ax, 16)
+        set_font_size(ax, 20)
 
     # PC spiking order
     if np.any(spk_ct_wdw_pc):
@@ -124,7 +127,7 @@ def heat_maps(rslt, epoch=None):
 
         im_1 = axs[1].scatter(
             pfxs_pc[spk_mask], pfys_pc[spk_mask], c=spk_order, s=25,
-            vmin=v_min, vmax=v_max, cmap='hsv', zorder=0)
+            vmin=v_min, vmax=v_max, cmap=cmap, zorder=0)
 
         divider_1 = make_axes_locatable(axs[1])
         c_ax_1 = divider_1.append_axes('right', size='5%', pad=0.05)
@@ -135,13 +138,16 @@ def heat_maps(rslt, epoch=None):
         axs[1].set_aspect('equal')
         
         set_n_x_ticks(axs[1], 5, -1, 1)
+        set_n_y_ticks(axs[1], 5, -1, 1)
         
-        axs[1].set_title('first spk order')
+        axs[1].set_xlabel('PF X (m)')
+        axs[1].set_ylabel('PF Y (m)')
+        axs[1].set_title('Replay spike order')
         for ax in [axs[1], cb_1.ax]:
-            set_font_size(ax, 16)
+            set_font_size(ax, 20)
     else:
         axs[1].set_title('No PC spks')
-        set_font_size(axs[1], 16)
+        set_font_size(axs[1], 20)
     axs[1].set_facecolor((.7, .7, .7))
 
     figs.append(fig)
