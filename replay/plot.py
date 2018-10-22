@@ -212,8 +212,8 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t
         set_n_x_ticks(ax_0, n_t_ticks)
     
     ax_0.set_xlabel('t (s)')
-    ax_0.set_ylabel('PC idx')
-    ax_0.set_title('Raster plot for selected cells')
+    ax_0.set_ylabel('Neuron')
+    ax_0.set_title('Spike times for select cells')
     
     ax_0.set_facecolor((.9, .9, .9))
     
@@ -222,7 +222,7 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t
     
     ax_1.scatter(
         pfxs[pc_idxs], pfys[pc_idxs], c=[pc_c_dict_0[pc_idx] for pc_idx in pc_idxs],
-        s=30, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
+        s=50, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
     
     ax_1.set_xlim(-1, 1)
     ax_1.set_ylim(-1, 1)
@@ -230,10 +230,10 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t
     set_n_x_ticks(ax_1, 3)
     set_n_y_ticks(ax_1, 3)
     
-    ax_1.set_xlabel('x (m)')
-    ax_1.set_ylabel('y (m)')
+    ax_1.set_xlabel('X (m)')
+    ax_1.set_ylabel('Y (m)')
     ax_1.set_facecolor((.9, .9, .9))
-    ax_1.set_title('PC PFs')
+    ax_1.set_title('Spatial key')
     
     for ax in [ax_0, ax_1]:
         set_font_size(ax, 20)
