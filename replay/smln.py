@@ -55,6 +55,7 @@ def run(p, s_params):
     # consolidate smln rslt
     rslt.ntwk = ntwk
     rslt.schedule = schedule
+    rslt.trg = s_params['TRG']
     
     rslt.p = p
     rslt.s_params = s_params
@@ -330,22 +331,22 @@ def i_ext_trg(t, ntwk, p, s_params, schedule):
     trg_mask = get_trg_mask_pc(ntwk, p, s_params)
     
     ## get time mask
-    t_mask = (schedule['T_TRG'] <= t) \
-        & (t < (schedule['T_TRG'] + p['D_TRG']))
+    t_mask = (s_params['TRG']['T'] <= t) \
+        & (t < (s_params['TRG']['T'] + s_params['TRG']['D']))
     
     ## add in external trigger
-    i_ext[np.outer(t_mask, trg_mask)] = p['A_TRG']
+    i_ext[np.outer(t_mask, trg_mask)] = s_params['TRG']['A']
     
     return i_ext
 
 
 def get_trg_mask_pc(ntwk, p, s_params):
-    dx = ntwk.pfxs - s_params['X_TRG']
-    dy = ntwk.pfys - s_params['Y_TRG']
+    dx = ntwk.pfxs - s_params['TRG']['X']
+    dy = ntwk.pfys - s_params['TRG']['Y']
     d = np.sqrt(dx**2 + dy**2)
     
     ## get mask
-    trg_mask = (d < p['R_TRG']) & (ntwk.types_rcr == 'PC')
+    trg_mask = (d < s_params['TRG']['R']) & (ntwk.types_rcr == 'PC')
     return trg_mask
 
 
@@ -361,7 +362,7 @@ def get_metrics(rslt, s_params):
     non_trj_mask = (~trj_mask) & mask_pc
     
     # get t_mask for detection window
-    start = rslt.schedule['T_TRG']
+    start = rslt.trg['T']
     end = start + m['WDW']
     t_mask = (start <= rslt.ts) & (rslt.ts < end)
     

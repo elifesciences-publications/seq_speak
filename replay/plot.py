@@ -63,7 +63,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
 
     ## detection wdw
     if epoch is None:
-        start = rslt.schedule['T_TRG']
+        start = rslt.trg['T']
         end = start + rslt.s_params['metrics']['WDW']
     else:
         start = epoch[0]
@@ -200,7 +200,7 @@ def raster(rslt, xys, nearest, epoch):
     ax_0.scatter(spk_ts, pcs, c='k', s=10, marker='|', lw=1)
     
     ## replay trigger
-    ax_0.scatter(rslt.schedule['T_TRG'], -1.5, marker='^', c='r')
+    ax_0.scatter(rslt.trg['T'], -1.5, marker='^', c='r')
     
     ax_0.set_xlim(start, end)
     ax_0.set_ylim(-3, len(pc_idxs))
