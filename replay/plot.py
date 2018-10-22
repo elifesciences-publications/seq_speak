@@ -155,7 +155,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     return figs, axss
         
         
-def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t_ticks=None, fig_size=(16, 4)):
+def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t_ticks=None, fig_size=(16, 4), title=None):
     """
     Generate a raster plot of spikes from a smln.
     
@@ -213,7 +213,8 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t
     
     ax_0.set_xlabel('t (s)')
     ax_0.set_ylabel('Neuron')
-    ax_0.set_title('Spike times for select cells')
+    if title is not None:
+        ax_0.set_title(title)
     
     ax_0.set_facecolor((.9, .9, .9))
     
