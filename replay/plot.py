@@ -21,7 +21,6 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     # Potentiation profile
     pcs = np.nonzero(rslt.ntwk.types_rcr == 'PC')[0]
 
-
     sgm = rslt.ntwk.sgm[pcs]
 
     ## get corresponding place fields
@@ -63,7 +62,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
 
     ## detection wdw
     if epoch is None:
-        start = rslt.trg['T']
+        start = rslt.trg[0]['T']
         end = start + rslt.s_params['metrics']['WDW']
     else:
         start = epoch[0]
@@ -200,7 +199,8 @@ def raster(rslt, xys, nearest, epoch):
     ax_0.scatter(spk_ts, pcs, c='k', s=10, marker='|', lw=1)
     
     ## replay trigger
-    ax_0.scatter(rslt.trg['T'], -1.5, marker='^', c='r')
+    for trg in rslt.trg:
+        ax_0.scatter(trg['T'], -1.5, marker='^', c='r')
     
     ax_0.set_xlim(start, end)
     ax_0.set_ylim(-3, len(pc_idxs))

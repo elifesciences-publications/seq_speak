@@ -327,26 +327,30 @@ def i_ext_trg(t, ntwk, p, s_params, schedule):
     i_ext = np.zeros((len(t), p['N_PC'] + p['N_INH']))
     
     # get mask over cells to trigger to induce replay
-    ## compute distances to trigger center
-    trg_mask = get_trg_mask_pc(ntwk, p, s_params)
-    
-    ## get time mask
-    t_mask = (s_params['TRG']['T'] <= t) \
-        & (t < (s_params['TRG']['T'] + s_params['TRG']['D']))
-    
-    ## add in external trigger
-    i_ext[np.outer(t_mask, trg_mask)] = s_params['TRG']['A']
-    
+    for trg in s_params['TRG']:
+        
+        ## compute distances to trigger center
+        trg_mask = get_trg_mask_pc(ntwk, p, trg)
+
+        ## get time mask
+        t_mask = (trg['T'] <= t) \
+            & (t < (trg['T'] + trg['D']))
+
+        ## add in external trigger
+        i_ext[np.outer(t_mask, trg_mask)] = trg['A']
+
     return i_ext
 
 
-def get_trg_mask_pc(ntwk, p, s_params):
-    dx = ntwk.pfxs - s_params['TRG']['X']
-    dy = ntwk.pfys - s_params['TRG']['Y']
+def get_trg_mask_pc(ntwk, p, trg):
+    """Get spatial mask for replay trigger."""
+    dx = ntwk.pfxs - trg['X']
+    dy = ntwk.pfys - trg['Y']
     d = np.sqrt(dx**2 + dy**2)
     
     ## get mask
-    trg_mask = (d < s_params['TRG']['R']) & (ntwk.types_rcr == 'PC')
+    trg_mask = (d < trg['R']) & (ntwk.types_rcr == 'PC')
+    
     return trg_mask
 
 
@@ -362,7 +366,7 @@ def get_metrics(rslt, s_params):
     non_trj_mask = (~trj_mask) & mask_pc
     
     # get t_mask for detection window
-    start = rslt.trg['T']
+    start = rslt.trg[0]['T']
     end = start + m['WDW']
     t_mask = (start <= rslt.ts) & (rslt.ts < end)
     
