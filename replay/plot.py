@@ -44,8 +44,8 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     cb = fig.colorbar(im, cax=c_ax, ticks=sgm_ticks)
     c_ax.set_ylabel('$\sigma$')
 
-    ax.set_xlabel('PF X (m)')
-    ax.set_ylabel('PF Y (m)')
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
     ax.set_aspect('equal')
     set_n_x_ticks(ax, 5, -1, 1)
     set_n_y_ticks(ax, 5, -1, 1)
@@ -102,8 +102,8 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     set_n_y_ticks(axs[0], 5, -1, 1)
     axs[0].set_facecolor((.7, .7, .7))
 
-    axs[0].set_xlabel('PF X (m)')
-    axs[0].set_ylabel('PF Y (m)')
+    axs[0].set_xlabel('X (m)')
+    axs[0].set_ylabel('Y (m)')
     axs[0].set_title('detection wdw spk ct')
 
     
@@ -139,8 +139,8 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
         set_n_x_ticks(axs[1], 5, -1, 1)
         set_n_y_ticks(axs[1], 5, -1, 1)
         
-        axs[1].set_xlabel('PF X (m)')
-        axs[1].set_ylabel('PF Y (m)')
+        axs[1].set_xlabel('X (m)')
+        axs[1].set_ylabel('Y (m)')
         axs[1].set_title('Replay spike order')
         for ax in [axs[1], cb_1.ax]:
             set_font_size(ax, 20)
@@ -171,7 +171,8 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, fig
     pfys = rslt.ntwk.pfys[pc_mask]
     
     ## loop through (x, y) pairs and add idxs of nearest PCs
-    pc_idxs, pc_c_dict = get_idxs_nearest(xys, pfxs, pfys, nearest, colors) 
+    ### pc_c_dict_0 uses original pc idxs, pc_c_dict_1 uses simplified pc idxs
+    pc_idxs, pc_c_dict_0, pc_c_dict_1 = get_idxs_nearest(xys, pfxs, pfys, nearest, colors) 
     
     # get all spks for selected PCs
     spks_pc_chosen = rslt.spks[:, pc_idxs]
@@ -196,12 +197,12 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, fig
     
     ## spks
     ax_0 = fig.add_subplot(gs[:3])
-    c = [pc_c_dict[pc_idx] for pc_idx in pcs]
+    c = [pc_c_dict_1[pc] for pc in pcs]
     ax_0.scatter(spk_ts, pcs, c=c, s=30, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
     
     ## replay trigger
     for trg, (y, marker) in zip(rslt.trg, trg_plt):
-        ax_0.scatter(trg['T'], y, marker=marker, c='k')
+        ax_0.scatter(trg['T'], y, marker=marker, s=100, c='k')
     
     ax_0.set_xlim(start, end)
     ax_0.set_ylim(y_lim)
@@ -217,8 +218,14 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, fig
     ax_1 = fig.add_subplot(gs[3])
     
     ax_1.scatter(
-        pfxs[pc_idxs], pfys[pc_idxs], c=np.linspace(0, 1, len(pc_idxs)),
-        s=30, lw=0, vmin=0, vmax=1, cmap='spring')
+        pfxs[pc_idxs], pfys[pc_idxs], c=[pc_c_dict_0[pc_idx] for pc_idx in pc_idxs],
+        s=30, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
+    
+    ax_1.set_xlim(-1, 1)
+    ax_1.set_ylim(-1, 1)
+    
+    set_n_x_ticks(ax_1, 3)
+    set_n_y_ticks(ax_1, 3)
     
     ax_1.set_xlabel('x (m)')
     ax_1.set_ylabel('y (m)')
@@ -237,7 +244,8 @@ def get_idxs_nearest(xys, pfxs, pfys, nearest, colors):
     sequence of (x, y) points.
     """
     idxs = []
-    c_dict = []
+    c_dict_0 = {}
+    c_dict_1 = []
     
     for xy, color in zip(xys, colors):
         # get dists of all PFs to (x, y)
@@ -249,6 +257,9 @@ def get_idxs_nearest(xys, pfxs, pfys, nearest, colors):
         pcs = list(d.argsort()[:nearest])
         idxs.extend(pcs)
         
-        c_dict.extend(len(pcs)*[color])
+        for pc in pcs:
+            c_dict_0[pc] = color
+            
+        c_dict_1.extend(len(pcs)*[color])
         
-    return idxs, np.array(c_dict)
+    return idxs, c_dict_0, np.array(c_dict_1)
