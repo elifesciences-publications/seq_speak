@@ -155,7 +155,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     return figs, axss
         
         
-def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, fig_size=(16, 4)):
+def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t_ticks=None, fig_size=(16, 4)):
     """
     Generate a raster plot of spikes from a smln.
     
@@ -207,6 +207,9 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, fig
     ax_0.set_xlim(start, end)
     ax_0.set_ylim(y_lim)
     ax_0.set_yticks(y_ticks)
+    
+    if n_t_ticks is not None:
+        set_n_x_ticks(ax_0, n_t_ticks)
     
     ax_0.set_xlabel('t (s)')
     ax_0.set_ylabel('PC idx')
