@@ -155,7 +155,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     return figs, axss
         
         
-def raster(rslt, xys, nearest, epoch, trg_plt):
+def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, fig_size=(16, 4)):
     """
     Generate a raster plot of spikes from a smln.
     
@@ -171,7 +171,7 @@ def raster(rslt, xys, nearest, epoch, trg_plt):
     pfys = rslt.ntwk.pfys[pc_mask]
     
     ## loop through (x, y) pairs and add idxs of nearest PCs
-    pc_idxs = get_idxs_nearest(xys, pfxs, pfys, nearest) 
+    pc_idxs, pc_c_dict = get_idxs_nearest(xys, pfxs, pfys, nearest, colors) 
     
     # get all spks for selected PCs
     spks_pc_chosen = rslt.spks[:, pc_idxs]
@@ -191,35 +191,38 @@ def raster(rslt, xys, nearest, epoch, trg_plt):
     spk_ts = spk_t_idxs * rslt.s_params['DT'] + t_start
     
     # make plots
-    fig = plt.figure(figsize=(16, 4), tight_layout=True)
+    fig = plt.figure(figsize=fig_size, tight_layout=True)
     gs = gridspec.GridSpec(1, 4)
     
     ## spks
     ax_0 = fig.add_subplot(gs[:3])
-    ax_0.scatter(spk_ts, pcs, c='k', s=10, marker='|', lw=1)
+    c = [pc_c_dict[pc_idx] for pc_idx in pcs]
+    ax_0.scatter(spk_ts, pcs, c=c, s=30, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
     
     ## replay trigger
     for trg, (y, marker) in zip(rslt.trg, trg_plt):
-        ax_0.scatter(trg['T'], y, marker=marker, c='r')
+        ax_0.scatter(trg['T'], y, marker=marker, c='k')
     
     ax_0.set_xlim(start, end)
-    ax_0.set_ylim(-3, len(pc_idxs))
+    ax_0.set_ylim(y_lim)
+    ax_0.set_yticks(y_ticks)
     
     ax_0.set_xlabel('t (s)')
     ax_0.set_ylabel('PC idx')
     ax_0.set_title('Raster plot for selected cells')
     
+    ax_0.set_facecolor((.9, .9, .9))
+    
     ## cell PF locations
     ax_1 = fig.add_subplot(gs[3])
-    ax_1.scatter(pfxs, pfys, c='k', s=25, lw=0)
     
     ax_1.scatter(
         pfxs[pc_idxs], pfys[pc_idxs], c=np.linspace(0, 1, len(pc_idxs)),
-        s=20, lw=0, vmin=0, vmax=1, cmap='spring')
+        s=30, lw=0, vmin=0, vmax=1, cmap='spring')
     
     ax_1.set_xlabel('x (m)')
     ax_1.set_ylabel('y (m)')
-    ax_1.set_facecolor((.7, .7, .7))
+    ax_1.set_facecolor((.9, .9, .9))
     ax_1.set_title('PC PFs')
     
     for ax in [ax_0, ax_1]:
@@ -228,20 +231,24 @@ def raster(rslt, xys, nearest, epoch, trg_plt):
     return fig, [ax_0, ax_1]
         
         
-def get_idxs_nearest(xys, pfxs, pfys, nearest):
+def get_idxs_nearest(xys, pfxs, pfys, nearest, colors):
     """
     Get ordered idxs of place fields nearest to a
     sequence of (x, y) points.
     """
     idxs = []
+    c_dict = []
     
-    for xy in xys:
+    for xy, color in zip(xys, colors):
         # get dists of all PFs to (x, y)
         dx = pfxs - xy[0]
         dy = pfys - xy[1]
         d = np.sqrt(dx**2 + dy**2)
         
         # add idxs of closest neurons to list
-        idxs.extend(list(d.argsort()[:nearest]))
+        pcs = list(d.argsort()[:nearest])
+        idxs.extend(pcs)
         
-    return idxs
+        c_dict.extend(len(pcs)*[color])
+        
+    return idxs, np.array(c_dict)
