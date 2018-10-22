@@ -155,7 +155,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     return figs, axss
         
         
-def raster(rslt, xys, nearest, epoch):
+def raster(rslt, xys, nearest, epoch, trg_plt):
     """
     Generate a raster plot of spikes from a smln.
     
@@ -199,8 +199,8 @@ def raster(rslt, xys, nearest, epoch):
     ax_0.scatter(spk_ts, pcs, c='k', s=10, marker='|', lw=1)
     
     ## replay trigger
-    for trg in rslt.trg:
-        ax_0.scatter(trg['T'], -1.5, marker='^', c='r')
+    for trg, (y, marker) in zip(rslt.trg, trg_plt):
+        ax_0.scatter(trg['T'], y, marker=marker, c='r')
     
     ax_0.set_xlim(start, end)
     ax_0.set_ylim(-3, len(pc_idxs))
