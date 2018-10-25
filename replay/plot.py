@@ -36,7 +36,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
 
     im = ax.scatter(pfx_pcs, pfy_pcs, c=sgm, s=25, vmin=v_min, vmax=v_max, cmap='hot')
 
-    ax.set_title('Potentiation profile')
+    ax.set_title('Trajectory-induced LTP-IE')
 
     ## colorbar nonsense
     divider = make_axes_locatable(ax)
