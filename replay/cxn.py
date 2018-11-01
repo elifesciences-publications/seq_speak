@@ -106,13 +106,7 @@ def _w_inh_pc_vs_d(d, p):
     """Return distance-dependent portion of w_inh_pc computation."""
     assert np.all(d >= 0)
     
-    # decrease weights as squared exp of dist
-    w = p['W_I_PC'] * np.exp(-d**2/(2*p['L_I_PC']**2))
-    
-    # set all weights below min weight th to 0
-    w[w < p['W_MIN_I_PC']] = 0
-    
-    return w
+    return np.zeros(d.shape)
     
     
 def make_w_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
@@ -136,14 +130,8 @@ def make_w_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
 def _w_pc_inh_vs_d(d, p):
     """Return distance-dependent portion of w_pc_inh computation."""
     assert np.all(d >= 0)
-    
-    # decrease weights as squared exp of dist (rel. to central dist)
-    w = p['W_PC_I'] * np.exp(-(d-p['D_PC_I'])**2/(2*p['L_PC_I']**2))
-    
-    # set all weights below min weight th to 0
-    w[w < p['W_MIN_PC_I']] = 0
-    
-    return w
+   
+    return np.zeros(d.shape)
 
 
 def make_w_pc_inh(pfxs_pc, pfys_pc, pfxs_inh, pfys_inh, p):
