@@ -47,8 +47,8 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     ax.set_xlabel('X (m)')
     ax.set_ylabel('Y (m)')
     ax.set_aspect('equal')
-    set_n_x_ticks(ax, 5, -1, 1)
-    set_n_y_ticks(ax, 5, -1, 1)
+    set_n_x_ticks(ax, 5, -rslt.s_params['BOX_W']/2, rslt.s_params['BOX_W']/2)
+    set_n_y_ticks(ax, 5, -rslt.s_params['BOX_H']/2, rslt.s_params['BOX_H']/2)
     ax.set_facecolor((.7, .7, .7))
     set_font_size(ax, 20)
 
@@ -98,8 +98,8 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     cb_0.set_ticklabels([0, 1, 2, 3, 4, '>4'])
 
     axs[0].set_aspect('equal')
-    set_n_x_ticks(axs[0], 5, -1, 1)
-    set_n_y_ticks(axs[0], 5, -1, 1)
+    set_n_x_ticks(axs[0], 5, -rslt.s_params['BOX_W']/2, rslt.s_params['BOX_W']/2)
+    set_n_y_ticks(axs[0], 5, -rslt.s_params['BOX_H']/2, rslt.s_params['BOX_H']/2)
     axs[0].set_facecolor((.7, .7, .7))
 
     axs[0].set_xlabel('X (m)')
@@ -136,8 +136,8 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
 
         axs[1].set_aspect('equal')
         
-        set_n_x_ticks(axs[1], 5, -1, 1)
-        set_n_y_ticks(axs[1], 5, -1, 1)
+        set_n_x_ticks(axs[1], 5, -rslt.s_params['BOX_W']/2, rslt.s_params['BOX_W']/2)
+        set_n_y_ticks(axs[1], 5, -rslt.s_params['BOX_H']/2, rslt.s_params['BOX_H']/2)
         
         axs[1].set_xlabel('X (m)')
         axs[1].set_ylabel('Y (m)')
