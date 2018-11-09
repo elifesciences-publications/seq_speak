@@ -10,7 +10,7 @@ import numpy as np
 from disp import set_font_size, set_n_x_ticks, set_n_y_ticks
 
 
-def heat_maps(rslt, epoch=None, cmap='viridis'):
+def heat_maps(rslt, epoch=None, cmap='viridis', sct_sz=25):
     """
     Plot heatmaps showing:
         1. W_PC_G values at start of trial.
@@ -34,7 +34,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     v_max = rslt.p['SGM_MAX']
     sgm_ticks = np.linspace(v_min, v_max, 5)
 
-    im = ax.scatter(pfx_pcs, pfy_pcs, c=sgm, s=25, vmin=v_min, vmax=v_max, cmap='hot')
+    im = ax.scatter(pfx_pcs, pfy_pcs, c=sgm, s=sct_sz, vmin=v_min, vmax=v_max, cmap='hot')
 
     ax.set_title('Trajectory-induced LTP-IE')
 
@@ -90,7 +90,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
     norm = mpl.colors.BoundaryNorm(bounds, c_map.N)
 
     im_0 = axs[0].scatter(
-        pfxs_pc, pfys_pc, c=spk_ct_wdw_pc, s=25, cmap=c_map, norm=norm)
+        pfxs_pc, pfys_pc, c=spk_ct_wdw_pc, s=sct_sz, cmap=c_map, norm=norm)
     divider_0 = make_axes_locatable(axs[0])
     c_ax_0 = divider_0.append_axes('right', size='5%', pad=0.05)
 
@@ -125,7 +125,7 @@ def heat_maps(rslt, epoch=None, cmap='viridis'):
         v_max = spk_order.max()
 
         im_1 = axs[1].scatter(
-            pfxs_pc[spk_mask], pfys_pc[spk_mask], c=spk_order, s=25,
+            pfxs_pc[spk_mask], pfys_pc[spk_mask], c=spk_order, s=sct_sz,
             vmin=v_min, vmax=v_max, cmap=cmap, zorder=0)
 
         divider_1 = make_axes_locatable(axs[1])
@@ -225,8 +225,8 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t
         pfxs[pc_idxs], pfys[pc_idxs], c=[pc_c_dict_0[pc_idx] for pc_idx in pc_idxs],
         s=50, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
     
-    ax_1.set_xlim(-1, 1)
-    ax_1.set_ylim(-1, 1)
+    ax_1.set_xlim(-rslt.s_params['BOX_W']/2, rslt.s_params['BOX_W']/2)
+    ax_1.set_ylim(-rslt.s_params['BOX_H']/2, rslt.s_params['BOX_H']/2)
     
     set_n_x_ticks(ax_1, 3)
     set_n_y_ticks(ax_1, 3)
