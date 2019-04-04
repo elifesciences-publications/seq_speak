@@ -6,6 +6,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.ndimage import gaussian_filter1d as smooth
 
 from disp import set_font_size, set_n_x_ticks, set_n_y_ticks
 
@@ -154,8 +155,66 @@ def heat_maps(rslt, epoch=None, cmap='viridis', sct_sz=25):
     
     return figs, axss
         
-        
-def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t_ticks=None, fig_size=(16, 4), title=None):
+
+# PC (excitatory) and INH raster/spike rate plot funcs
+def plot_pc(rslt, smoothness=1):
+    fig, axs = plt.subplots(2, 1, figsize=(15, 6), sharex=True, tight_layout=True)
+    
+    # get spks
+    spks_pc = rslt.spks[:, :rslt.p['N_PC']]
+    
+    # raster
+    t_idxs_spks_pc, nrn_spks_pc = spks_pc.nonzero()
+    t_spks_pc = t_idxs_spks_pc * rslt.dt
+    
+    axs[0].scatter(t_spks_pc, nrn_spks_pc, s=5, c='k')
+    axs[0].set_ylim(-1, rslt.p['N_PC'])
+    axs[0].set_xlabel('Time (s)')
+    axs[0].set_ylabel('Neuron')
+    axs[0].set_title('PC activity')
+    
+    # inh population average
+    axs[1].plot(rslt.ts, smooth(spks_pc.sum(axis=1) / (rslt.dt * rslt.p['N_PC']), smoothness), c='k', lw=3)
+    axs[1].set_xlabel('Time (s)')
+    axs[1].set_ylabel('Average spike rate')
+    
+    for ax in axs:
+        ax.set_xlim(0, rslt.ts[-1])
+        set_font_size(ax, 16)
+    
+    return fig, axs
+
+
+def plot_inh(rslt, smoothness=1):
+    fig, axs = plt.subplots(2, 1, figsize=(15, 6), sharex=True, tight_layout=True)
+    
+    # get spks
+    spks_inh = rslt.spks[:, -rslt.p['N_INH']:]
+    
+    # raster
+    t_idxs_spks_inh, nrn_spks_inh = spks_inh.nonzero()
+    t_spks_inh = t_idxs_spks_inh * rslt.dt
+    
+    axs[0].scatter(t_spks_inh, nrn_spks_inh, s=5, c='r')
+    axs[0].set_ylim(-1, rslt.p['N_INH'])
+    axs[0].set_xlabel('Time (s)')
+    axs[0].set_ylabel('Neuron')
+    axs[0].set_title('Inhibitory activity')
+    
+    # inh population average
+    axs[1].plot(rslt.ts, smooth(spks_inh.sum(axis=1) / (rslt.dt * rslt.p['N_INH']), smoothness), c='r', lw=3)
+    axs[1].set_xlabel('Time (s)')
+    axs[1].set_ylabel('Average spike rate')
+    
+    for ax in axs:
+        ax.set_xlim(0, rslt.ts[-1])
+        set_font_size(ax, 16)
+    
+    return fig, axs
+
+    
+# selective raster plot
+def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t_ticks=None, fig_size=(15, 4), title=None):
     """
     Generate a raster plot of spikes from a smln.
     
@@ -192,56 +251,35 @@ def raster(rslt, xys, colors, cmap, nearest, epoch, trg_plt, y_lim, y_ticks, n_t
     spk_ts = spk_t_idxs * rslt.s_params['DT'] + t_start
     
     # make plots
-    fig = plt.figure(figsize=fig_size, tight_layout=True)
-    gs = gridspec.GridSpec(1, 4)
+    fig, ax = plt.subplots(1, 1, figsize=fig_size, tight_layout=True)
     
     ## spks
-    ax_0 = fig.add_subplot(gs[:3])
     c = [pc_c_dict_1[pc] for pc in pcs]
-    ax_0.scatter(spk_ts, pcs, c=c, s=30, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
+    ax.scatter(spk_ts, pcs, c=c, s=30, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
     
     ## replay trigger
     for trg, (y, marker) in zip(rslt.trg, trg_plt):
-        ax_0.scatter(trg['T'], y, marker=marker, s=100, c='k')
+        ax.scatter(trg['T'], y, marker=marker, s=100, c='k')
     
-    ax_0.set_xlim(start, end)
-    ax_0.set_ylim(y_lim)
-    ax_0.set_yticks(y_ticks)
+    ax.set_xlim(start, end)
+    ax.set_ylim(y_lim)
+    ax.set_yticks(y_ticks)
     
     if n_t_ticks is not None:
         set_n_x_ticks(ax_0, n_t_ticks)
     
-    ax_0.set_xlabel('t (s)')
-    ax_0.set_ylabel('Neuron')
+    ax.set_xlabel('t (s)')
+    ax.set_ylabel('Neuron')
     if title is not None:
-        ax_0.set_title(title)
+        ax.set_title(title)
     
-    ax_0.set_facecolor((.9, .9, .9))
+    ax.set_facecolor((.9, .9, .9))
     
-    ## cell PF locations
-    ax_1 = fig.add_subplot(gs[3])
-    
-    ax_1.scatter(
-        pfxs[pc_idxs], pfys[pc_idxs], c=[pc_c_dict_0[pc_idx] for pc_idx in pc_idxs],
-        s=50, vmin=0, vmax=1, cmap=cmap, lw=.5, edgecolor='k')
-    
-    ax_1.set_xlim(-rslt.s_params['BOX_W']/2, rslt.s_params['BOX_W']/2)
-    ax_1.set_ylim(-rslt.s_params['BOX_H']/2, rslt.s_params['BOX_H']/2)
-    
-    set_n_x_ticks(ax_1, 3)
-    set_n_y_ticks(ax_1, 3)
-    
-    ax_1.set_xlabel('X (m)')
-    ax_1.set_ylabel('Y (m)')
-    ax_1.set_facecolor((.9, .9, .9))
-    ax_1.set_title('Spatial key')
-    
-    for ax in [ax_0, ax_1]:
-        set_font_size(ax, 20)
+    set_font_size(ax, 20)
         
-    return fig, [ax_0, ax_1]
-        
-        
+    return fig, ax
+
+    
 def get_idxs_nearest(xys, pfxs, pfys, nearest, colors):
     """
     Get ordered idxs of place fields nearest to a
