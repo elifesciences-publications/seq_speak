@@ -73,7 +73,7 @@ def run(p, s_params):
    
     return rslt
 
- 
+
 def build_ntwk(p, s_params):
     """
     Construct a network object from the model and
@@ -136,7 +136,7 @@ def build_ntwk(p, s_params):
     
     # make rcr ws
     w_pc_pc = cxn.make_w_pc_pc(pfxs[:p['N_PC']], pfys[:p['N_PC']], p)
-    
+
     w_inh_pc = cxn.make_w_inh_pc(
         pfxs_inh=pfxs[-p['N_INH']:],
         pfys_inh=pfys[-p['N_INH']:],

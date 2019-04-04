@@ -102,13 +102,6 @@ def make_w_pc_pc(pfxs, pfys, p):
     return _w_pc_pc_vs_d(d, p)
     
 
-def _w_inh_pc_vs_d(d, p):
-    """Return distance-dependent portion of w_inh_pc computation."""
-    assert np.all(d >= 0)
-    
-    return np.zeros(d.shape)
-    
-    
 def make_w_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
     """
     Make proximally biased PC->INH weight matrix.
@@ -116,24 +109,11 @@ def make_w_inh_pc(pfxs_inh, pfys_inh, pfxs_pc, pfys_pc, p):
     n_inh = p['N_INH']
     n_pc = p['N_PC']
     
-    # build distance matrix
-    dx = np.tile(pfxs_pc[None, :], (n_inh, 1)) \
-        - np.tile(pfxs_inh[:, None], (1, n_pc))
-    dy = np.tile(pfys_pc[None, :], (n_inh, 1)) \
-        - np.tile(pfys_inh[:, None], (1, n_pc))
-    d = np.sqrt(dx**2 + dy**2)
-    
     # build weight matrix
-    return _w_inh_pc_vs_d(d, p)
+    w_inh_pc = p['W_INH_PC'] * (np.random.rand(n_inh, n_pc) < 0.5).astype(float)
+    return w_inh_pc
     
     
-def _w_pc_inh_vs_d(d, p):
-    """Return distance-dependent portion of w_pc_inh computation."""
-    assert np.all(d >= 0)
-   
-    return np.zeros(d.shape)
-
-
 def make_w_pc_inh(pfxs_pc, pfys_pc, pfxs_inh, pfys_inh, p):
     """
     Make center-surround structured INH->PC weight matrix.
@@ -141,12 +121,6 @@ def make_w_pc_inh(pfxs_pc, pfys_pc, pfxs_inh, pfys_inh, p):
     n_pc = p['N_PC']
     n_inh = p['N_INH']
     
-    # build distance matrix
-    dx = np.tile(pfxs_inh[None, :], (n_pc, 1)) \
-        - np.tile(pfxs_pc[:, None], (1, n_inh))
-    dy = np.tile(pfys_inh[None, :], (n_pc, 1)) \
-        - np.tile(pfys_pc[:, None], (1, n_inh))
-    d = np.sqrt(dx**2 + dy**2)
-    
     # build weight matrix
-    return _w_pc_inh_vs_d(d, p)
+    w_pc_inh = p['W_PC_INH'] * (np.random.rand(n_pc, n_inh) < 0.5).astype(float)
+    return w_pc_inh
