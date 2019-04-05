@@ -63,11 +63,6 @@ def run(p, s_params):
     rslt.trj = trj
     rslt.trj_veil = trj_veil
     
-    metrics, success = get_metrics(rslt, s_params)
-    
-    rslt.metrics = metrics
-    rslt.success = success
-    
     rslt.prep_time = prep_time
     rslt.run_time = run_time
    
@@ -352,49 +347,3 @@ def get_trg_mask_pc(ntwk, p, trg):
     trg_mask = (d < trg['R']) & (ntwk.types_rcr == 'PC')
     
     return trg_mask
-
-
-def get_metrics(rslt, s_params):
-    """
-    Compute basic metrics from smln rslt quantifying replay properties.
-    """
-    m = s_params['metrics']
-    mask_pc = rslt.ntwk.types_rcr == 'PC'
-    
-    # get masks over trj & non-trj PCs
-    trj_mask = (rslt.trj_veil * mask_pc) > (m['MIN_SCALE_TRJ'] - 1)
-    non_trj_mask = (~trj_mask) & mask_pc
-    
-    # get t_mask for detection window
-    start = rslt.trg[0]['T']
-    end = start + m['WDW']
-    t_mask = (start <= rslt.ts) & (rslt.ts < end)
-    
-    # get spk cts for trj/non-trj cells during detection window
-    spks_wdw = rslt.spks[t_mask]
-    spks_trj = spks_wdw[:, trj_mask]
-    spks_non_trj = spks_wdw[:, non_trj_mask]
-    
-    # get fraction of trj/non-trj cells that spiked
-    frac_spk_trj = np.mean(spks_trj.sum(0) > 0)
-    frac_spk_non_trj = np.mean(spks_non_trj.sum(0) > 0)
-    
-    # get avg spk ct of spiking trj cells
-    avg_spk_ct_trj = spks_trj.sum(0)[spks_trj.sum(0) > 0].mean()
-    
-    # check conditions for successful replay 
-    if (frac_spk_trj >= m['MIN_FRAC_SPK_TRJ']) \
-            and (frac_spk_trj >= (frac_spk_non_trj*m['TRJ_NON_TRJ_SPK_RATIO'])) \
-            and (avg_spk_ct_trj < m['MAX_AVG_SPK_CT_TRJ']):
-        success = True
-    else:
-        success = False
-        
-    metrics = {
-        'frac_spk_trj': frac_spk_trj,
-        'frac_spk_non_trj': frac_spk_non_trj,
-        'avg_spk_ct_trj': avg_spk_ct_trj,
-        'success': success,
-    }
-    
-    return metrics, success
