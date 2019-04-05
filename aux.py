@@ -1,6 +1,8 @@
 import numpy as np
 import os
 
+cc = np.concatenate
+
 
 class Generic(object):
     """Class for generic object."""
