@@ -36,3 +36,22 @@ def set_n_y_ticks(ax, n, y_min=None, y_max=None):
     y_max = np.max(y_ticks) if y_max is None else y_max
     
     ax.set_yticks(np.linspace(y_min, y_max, n))
+
+    
+def set_colors(ax, color):
+    """Set colors on all parts of axis."""
+
+    ax.spines['bottom'].set_color(color)
+    ax.spines['top'].set_color(color)
+    ax.spines['left'].set_color(color)
+    ax.spines['right'].set_color(color)
+
+    ax.tick_params(axis='x', color=color)
+    ax.tick_params(axis='y', color=color)
+
+    for text in ax.get_xticklabels() + ax.get_yticklabels():
+        text.set_color(color)
+
+    ax.title.set_color(color)
+    ax.xaxis.label.set_color(color)
+    ax.yaxis.label.set_color(color)
