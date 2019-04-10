@@ -593,3 +593,30 @@ def get_idxs_nearest(xys, pfxs, pfys, nearest, colors):
         c_dict_1.extend(len(pcs)*[color])
         
     return idxs, c_dict_0, np.array(c_dict_1)
+
+
+def decoded_trj(ax, rslt, t, xy, cmap='plasma'):
+    """Plot decoded trajectory."""
+    x, y = xy.T
+    
+    # make colors
+    c = np.linspace(0, 1, len(t))
+    ax.scatter(x, y, c=c, s=50, marker='^')
+    
+    x_min = -rslt.s_params['BOX_W']/2
+    x_max = rslt.s_params['BOX_W']/2
+    y_min = -rslt.s_params['BOX_H']/2
+    y_max = rslt.s_params['BOX_H']/2
+    
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    
+    set_n_x_ticks(ax, 5)
+    set_n_y_ticks(ax, 5)
+    
+    ax.set_facecolor((.8, .8, .8))
+    
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    
+    set_font_size(ax, 16)
