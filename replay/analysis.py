@@ -1,4 +1,8 @@
+from copy import deepcopy as copy
+import json
+
 import numpy as np
+import pandas as pd
 from scipy.ndimage import gaussian_filter1d as smooth
 from scipy import stats
 
@@ -199,3 +203,68 @@ def decode_trj(rslt, start, end, wdw, min_spks_wdw=10):
             xy_hat.append([x_hat, y_hat])
             
     return np.array(t), np.array(xy_hat)
+
+
+def make_df(f_name):
+    # load header data and smln results
+    with open(f_name, 'r') as f:
+
+        tmp = json.loads(f.readline())
+
+        sweep_params = tmp['SWEEP_PARAMS']
+        m_params = tmp['M_PARAMS']
+        s_params = tmp['S_PARAMS']
+        a_params = tmp['A_PARAMS']
+
+        rslts = [json.loads(l) for l in f.readlines()[1:]]
+        
+    params_varied = sweep_params['VARY']
+    
+    # header info dict
+    header = {
+        'sweep_params': sweep_params,
+        'm_params': m_params,
+        's_params': s_params,
+        'a_params': a_params,
+        'params_varied': params_varied,
+    }
+
+    # build dataframe from results
+    columns = list(params_varied) + ['EVT_CT', 'ONE_WAY_CT', 'FR_TRJ', 'FR_NTRJ', 'EVT_DUR']
+    columns += sum(
+        [
+            [
+                'EVT_CT_{}'.format(ctr),
+                'ONE_WAY_CT_{}'.format(ctr),
+                'FR_TRJ_{}'.format(ctr),
+                'FR_NTRJ_{}'.format(ctr),
+                'EVT_DUR_{}'.format(ctr)
+            ]
+            for ctr in range(sweep_params['N_TRIALS'])
+        ], [])
+
+    df_dicts = []
+
+    for rslt in rslts:
+
+        df_dict = copy(rslt['PARAMS'])
+
+        metrics = rslt['METRICS']
+
+        df_dict['EVT_CT'] = np.mean([v['evt_ct'] for v in metrics.values()])
+        df_dict['ONE_WAY_CT'] = np.mean([v['one_way_ct'] for v in metrics.values()])
+        df_dict['FR_TRJ'] = np.mean([v['fr_trj'] for v in metrics.values() if v['evt_ct'] >= 3])
+        df_dict['FR_NTRJ'] = np.mean([v['fr_ntrj'] for v in metrics.values() if v['evt_ct'] >= 3])
+        df_dict['EVT_DUR'] = np.mean([v['evt_dur'] for v in metrics.values() if v['evt_ct'] >= 3])
+
+        for k, v in metrics.items():
+            df_dict['EVT_CT_{}'.format(k)] = v['evt_ct']
+            df_dict['ONE_WAY_CT_{}'.format(k)] = v['one_way_ct']
+            df_dict['FR_TRJ_{}'.format(k)] = v['fr_trj']
+            df_dict['FR_NTRJ_{}'.format(k)] = v['fr_ntrj']
+            df_dict['EVT_DUR_{}'.format(k)] = v['evt_dur']
+
+        df_dicts.append(df_dict)
+
+    # build final dataframe
+    return pd.DataFrame(data=df_dicts, columns=columns), rslts, header
