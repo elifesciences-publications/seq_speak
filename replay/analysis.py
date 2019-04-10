@@ -187,7 +187,7 @@ def decode_trj(rslt, start, end, wdw, min_spks_wdw=10):
         spks_wdw = rslt.spks[t_mask, :][:, pc_mask]
         
         if spks_wdw.sum() < min_spks_wdw:
-            xy_hat.append(np.nan)
+            xy_hat.append([np.nan, np.nan])
         else:
             # get idxs of spking pcs
             pc_idxs = np.nonzero(spks_wdw)[1]
