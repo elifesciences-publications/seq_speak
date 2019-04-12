@@ -205,6 +205,72 @@ def decode_trj(rslt, start, end, wdw, min_spks_wdw=10):
     return np.array(t), np.array(xy_hat)
 
 
+def calc_spd(rslt, start, end, a_params, debug=False):
+    """
+    Calculate virtual replay speed from event.
+    
+    Should be given unidirectional events only (where correlation > 0.9)
+    """
+    # do checks
+    if end - start < a_params['MIN_DUR_SPD_CALC']:
+        print('Note: replay epoch < {} s'.format(a_params['MIN_DUR_SPD_CALC']))
+        
+    # truncate start and end
+    rm = a_params['SPD_CALC_TRNC_FRAC'] * (end - start)
+    
+    start = start + rm
+    end = end - rm
+    
+    # get time mask over epoch
+    t_mask = (start <= rslt.ts) & (rslt.ts < end)
+    t = rslt.ts[t_mask]
+    
+    # get pc_mask
+    pc_mask = rslt.ntwk.types_rcr == 'PC'
+    
+    # get pc spks in this epoch
+    spks_pc = rslt.spks[t_mask][:, pc_mask]
+    
+    # get times and pc idxs of spks
+    t_spk_idxs, pc_idxs = spks_pc.nonzero()
+    ts_spk = (t_spk_idxs * rslt.s_params['DT']) + start
+    
+    # convert pc idxs to place fields
+    pfxs_spk = rslt.ntwk.pfxs[pc_mask][pc_idxs]
+    pfys_spk = rslt.ntwk.pfys[pc_mask][pc_idxs]
+    
+    # convert pc idxs to pos along trj
+    ## get array of distances along trj
+    dx_trj = cc([[0], np.diff(rslt.trj['x'])])
+    dy_trj = cc([[0], np.diff(rslt.trj['y'])])
+    dr_trj = np.sqrt(dx_trj**2 + dy_trj**2)
+    d_trj = np.cumsum(dr_trj)
+    
+    ## for each pc spk, get idx of trj pt closest to its place field
+    spk_idxs_nearest_trj_pt = dist_to_trj(pfxs_spk, pfys_spk, rslt.trj['x'], rslt.trj['y'])[1]
+    
+    ## get corresponding distance along trj for each pc spk
+    ds_trj_spk = d_trj[spk_idxs_nearest_trj_pt]
+    
+    # fit line
+    slp, icpt = stats.linregress(ts_spk, ds_trj_spk)[:2]
+    
+    spd = np.abs(slp)
+    
+    if debug:
+        return spd, {
+            'pfxs_spk': pfxs_spk,
+            'pfys_spk': pfys_spk,
+            'd_trj': d_trj,
+            'ds_trj_spk': ds_trj_spk,
+            'ts_spk': ts_spk,
+            'slp': slp,
+            'icpt': icpt,
+        }
+    else:
+        return spd
+
+
 def make_df(f_name):
     # load header data and smln results
     with open(f_name, 'r') as f:
