@@ -269,6 +269,16 @@ def calc_spd(rslt, start, end, a_params, debug=False):
         }
     else:
         return spd
+    
+    
+def calc_swr_psd(rslt, t_max, frq_max, debug=False):
+    """Calc power spectra for SWRs identified in simulation result."""
+    
+    n_frq = int(np.round(T/rslt.s_params['DT']))
+    frq = np.fft.fftfreq(n_frq, rslt.s_params['DT'])
+    frq_stop_idx = int(np.round(len(frq)/2))
+    
+    pass
 
 
 def make_df(f_name):
@@ -329,6 +339,108 @@ def make_df(f_name):
             df_dict['FR_TRJ_{}'.format(k)] = v['fr_trj']
             df_dict['FR_NTRJ_{}'.format(k)] = v['fr_ntrj']
             df_dict['EVT_DUR_{}'.format(k)] = v['evt_dur']
+
+        df_dicts.append(df_dict)
+
+    # build final dataframe
+    return pd.DataFrame(data=df_dicts, columns=columns), rslts, header
+
+
+def make_df_ext(f_name, dur_min, dur_max):
+    """Make dataframe showing replay speeds."""
+    with open(f_name, 'r') as f:
+
+        tmp = json.loads(f.readline())
+
+        sweep_params = tmp['SWEEP_PARAMS']
+        m_params = tmp['M_PARAMS']
+        s_params = tmp['S_PARAMS']
+        a_params = tmp['A_PARAMS']
+
+        rslts = [json.loads(l) for l in f.readlines()[1:]]
+        
+    params_varied = sweep_params['VARY']
+    
+    # header info dict
+    header = {
+        'sweep_params': sweep_params,
+        'm_params': m_params,
+        's_params': s_params,
+        'a_params': a_params,
+        'params_varied': params_varied,
+    }
+
+    # build dataframe from results
+    columns = list(params_varied) + ['SPD_CT', 'MEAN_SPD', 'MEDIAN_SPD', 'MIN_SPD', 'MAX_SPD', 'STD_SPD']
+    columns += sum(
+        [
+            [
+                'SPD_CT_{}'.format(ctr),
+                'MEAN_SPD_{}'.format(ctr),
+                'MEDIAN_SPD_{}'.format(ctr),
+                'MIN_SPD_{}'.format(ctr),
+                'MAX_SPD_{}'.format(ctr)
+            ]
+            for ctr in range(sweep_params['N_TRIALS'])
+        ], [])
+
+    df_dicts = []
+    
+    for rslt in rslts:
+
+        df_dict = copy(rslt['PARAMS'])
+        
+        spds_valid = []
+
+        for ctr in range(sweep_params['N_TRIALS']):
+            
+            durs = np.array(rslt['DURS'][str(ctr)])
+            spds = np.array(rslt['SPDS'][str(ctr)])
+            
+            if len(durs) > 0:
+                # get mask over all events with valid durations
+                mask = (dur_min <= durs) & (durs < dur_max)
+                
+                df_dict['SPD_CT_{}'.format(ctr)] = np.sum(mask)
+                
+                if np.sum(mask) > 0:
+                    df_dict['MEAN_SPD_{}'.format(ctr)] = np.mean(spds[mask])
+                    df_dict['MEDIAN_SPD_{}'.format(ctr)] = np.median(spds[mask])
+                    df_dict['MIN_SPD_{}'.format(ctr)] = np.min(spds[mask])
+                    df_dict['MAX_SPD_{}'.format(ctr)] = np.max(spds[mask])
+                    
+                    if np.sum(mask) >= 2:
+                        df_dict['STD_SPD_{}'.format(ctr)] = np.std(spds[mask])
+                    else:
+                        df_dict['STD_SPD_{}'.format(ctr)] = np.nan
+                    
+                    spds_valid.extend(copy(list(spds)))
+                
+                else:
+                    df_dict['MEAN_SPD_{}'.format(ctr)] = np.nan
+                    df_dict['MEDIAN_SPD_{}'.format(ctr)] = np.nan
+                    df_dict['MIN_SPD_{}'.format(ctr)] = np.nan
+                    df_dict['MAX_SPD_{}'.format(ctr)] = np.nan
+                    df_dict['STD_SPD_{}'.format(ctr)] = np.nan
+                    
+            else:
+                df_dict['MEAN_SPD_{}'.format(ctr)] = np.nan
+                df_dict['MEDIAN_SPD_{}'.format(ctr)] = np.nan
+                df_dict['MIN_SPD_{}'.format(ctr)] = np.nan
+                df_dict['MAX_SPD_{}'.format(ctr)] = np.nan
+                df_dict['STD_SPD_{}'.format(ctr)] = np.nan
+
+        df_dict['SPD_CT'] = len(spds_valid)
+        
+        if len(spds_valid) > 0:
+            df_dict['MEAN_SPD'] = np.mean(spds_valid)
+            df_dict['MEDIAN_SPD'] = np.median(spds_valid)
+            df_dict['MIN_SPD'] = np.min(spds_valid)
+            df_dict['MAX_SPD'] = np.max(spds_valid)
+        if len(spds_valid) >= 2:
+            df_dict['STD_SPD'] = np.std(spds_valid)
+        else:
+            df_dict['STD_SPD'] = np.nan
 
         df_dicts.append(df_dict)
 
