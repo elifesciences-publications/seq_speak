@@ -4,6 +4,8 @@ from scipy.sparse import csc_matrix
 import os
 import time
 
+from aux import Generic
+
 
 # CONNECTIVITY
 
@@ -401,3 +403,66 @@ class NtwkResponse(object):
     def n(self):
         """Number of neurons."""
         return self.vs.shape[1]
+    
+    
+class SimpleNtwk(object):
+    """Simplified network model."""
+    
+    def __init__(self, w, ltp_ie, max_active, v_th, rp):
+        
+        assert w.shape[0] == w.shape[1]
+        assert len(ltp_ie) == w.shape[0]
+        assert v_th > 0
+        assert max_active <= w.shape[0]
+        
+        self.w = w
+        self.ltp_ie = ltp_ie
+        self.max_active = max_active
+        self.v_th = v_th
+        self.rp = int(rp)
+        
+        self.n = w.shape[0]
+    
+    def run(self, inp_ext, inp_g):
+        
+        n_t = len(inp_ext)
+        
+        v = np.zeros((n_t, self.n), dtype=float)
+        spks = np.zeros((n_t, self.n), dtype=bool)
+        
+        rp = np.zeros(self.n, dtype=int)
+        
+        spks_prev = np.zeros(self.n, dtype=bool)
+        
+        for t_ctr, inp_ext_ in enumerate(inp_ext):
+            
+            # compute total inputs
+            # (recurrent + g + external)
+            v_ = self.w.dot(spks_prev) + inp_g*(1+self.ltp_ie) + inp_ext_
+            
+            # set nrns in refrac period to 0
+            v_[rp > 0] = 0
+            
+            # decrement refractory period
+            rp = np.clip(rp-1, 0, np.inf)
+            
+            # get tmp variable containing only max_active voltages
+            v_max_only = np.zeros(self.n)
+            idxs_most_active = np.argsort(v_)[-self.max_active:]
+            v_max_only[idxs_most_active] = v_[idxs_most_active]
+            
+            # convert to spks
+            spks_ = v_max_only >= self.v_th
+            #spks_ = np.zeros(self.n, dtype=bool)
+            #if np.any(v_max_only >= self.v_th):
+            #    spks_[idxs_most_active] = True
+            
+            # reset refractory period for spking nrns
+            rp[spks_] = self.rp
+            
+            # store everything
+            v[t_ctr] = v_.copy()
+            spks[t_ctr] = spks_.copy()
+            spks_prev = spks_.copy()
+        
+        return Generic(t=np.arange(len(inp_ext)), v=v, spks=spks)
