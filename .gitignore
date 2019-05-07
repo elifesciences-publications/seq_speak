@@ -4,6 +4,7 @@
 !*.ipynb
 !*.py
 !replay
+!assoc
 !*.gitignore
 
 sandbox.ipynb
