@@ -1,4 +1,6 @@
-Code for Pang, R, and Adrienne L Fairhall. 2019. Fast and Flexible Sequence Induction in Spiking Neural Networks Via Rapid Excitability Changes. bioRxiv doi: [10.1101/494310](https://doi.org/10.1101/494310).
+Code for:
+
+Pang, R, and Adrienne L Fairhall. 2019. Fast and Flexible Sequence Induction in Spiking Neural Networks Via Rapid Excitability Changes. bioRxiv doi: [10.1101/494310](https://doi.org/10.1101/494310).
 
 ### Figure reproduction key
 
