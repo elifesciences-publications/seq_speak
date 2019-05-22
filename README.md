@@ -1,6 +1,6 @@
 Code for:
 
-Pang, R, and Adrienne L Fairhall. 2019. Fast and Flexible Sequence Induction in Spiking Neural Networks Via Rapid Excitability Changes. bioRxiv doi: [10.1101/494310](https://doi.org/10.1101/494310).
+[Pang, Rich, and Adrienne L. Fairhall. "Fast and flexible sequence induction in spiking neural networks via rapid excitability changes." eLife 8 (2019): e44324.](https://elifesciences.org/articles/44324).
 
 ### Figure reproduction key
 
