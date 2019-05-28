@@ -1,6 +1,6 @@
 Code for:
 
-[Pang, Rich, and Adrienne L. Fairhall. "Fast and flexible sequence induction in spiking neural networks via rapid excitability changes." eLife 8 (2019): e44324.](https://elifesciences.org/articles/44324).
+[Pang, Rich, and Adrienne L. Fairhall. "Fast and flexible sequence induction in spiking neural networks via rapid excitability changes." eLife 8 (2019): e44324.](https://doi.org/10.7554/eLife.44324)
 
 ### Figure reproduction key
 
